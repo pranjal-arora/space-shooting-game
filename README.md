@@ -1,6 +1,6 @@
 ## SPACE SHOOTING GAME - Computer Graphics project
 A space shooting game to attack your opponent, built using C++ and libraries like OpenGL and GLUT.
-The main bjective is to kill your opponent. Each time a player gets shot, LIFE decreases by 5 points.
+The main objective is to kill your opponent. Each time a player gets shot, LIFE decreases by 5 points.
 
 ### Submitted By:- 
 - Pranjal Arora (102003402)
