@@ -13,7 +13,7 @@ The main objective is to kill your opponent. Each time a player gets shot, LIFE 
 - S - DOWN
 - A - LEFT
 - D - RIGHT
-- C - to shoot, Use 'w' and 's' to change direction.
+- C - to shoot, Use 'W' and 'S' to change direction.
 
 #### Keybord control for PLAYER 2 :
 - I - UP
