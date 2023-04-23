@@ -1,11 +1,37 @@
+// Keyboard control for PLAYER 1 :
+// W - UP
+// S - DOWN
+// A - LEFT
+// D - RIGHT
+// C - to shoot, Use 'W' and 'S' to change direction.
+// Keybord control for PLAYER 2 :
+// I - UP
+// K - DOWN
+// J - LEFT
+// L - RIGHT
+// M - to shoot, Use 'I' and 'K' to change direction.
+
+
+// CG concepts:-
+// 1.transformation- translation, scaling, rotation, 
+// 2.mathematical calculation- finding intersection of laser lines and spaceship circle using discriminant
+// 3. Rasterization techniques to display text
+// 4.concept of event listeners/handlers
+// 5.passivemotionfunc- window to viewport transformation
+// 6.matrix transformation in stack-psuh,pop
+
+// other cg concepts:- flush, buffers,  line loop, line strip, convex polygon drawing
+
+
+
 #ifdef _WIN32
-#include<windows.h>
+#include<windows.h> //access Windows API, to manipulate windows gui components
 #endif
 #include<stdio.h>
 #include<stdlib.h>
 #include<GL/glut.h>
 #include<math.h>
-#define GL_SILENCE_DEPRECATION
+#define GL_SILENCE_DEPRECATION //ignore warnings in MacOS
 
 #define XMAX 1200
 #define YMAX 700
@@ -16,57 +42,68 @@
 #define LEFT 3
 
 
-GLint m_viewport[4];
+//event handler variables
+GLint m_viewport[4]; //GLint- graphic card related int variable 
 bool mButtonPressed = false;
-float mouseX, mouseY;
-enum view { INTRO, MENU, INSTRUCTIONS, GAME, GAMEOVER };
+float mouseX, mouseY; //cursor coordinates
+enum view { INTRO, MENU, INSTRUCTIONS, GAME, GAMEOVER }; //enum is userdefined datatype to contains integral constants
 view viewPage = INTRO; // initial value
 bool keyStates[256] = { false };
-bool direction[4] = { false };
-bool laser1Dir[2] = { false };
-bool laser2Dir[2] = { false };
+bool direction[4] = { false }; //bool array for 4 directions, RLUD
+bool laser1Dir[2] = { false }; //bool array for 2 direction of 1st laser
+bool laser2Dir[2] = { false};
 
 int alienLife1 = 100;
 int alienLife2 = 100;
 bool gameOver = false;
-float xOne = 500, yOne = 0;
+float xOne = 500, yOne = 0; 
 float xTwo = 500, yTwo = 0;
 bool laser1 = false, laser2 = false;
 GLint CI = 0;
-GLfloat a[][2] = { 0,-50, 70,-50, 70,70, -70,70 };
-GLfloat LightColor[][3] = { 1,1,0,   0,1,1,   0,1,0 };
-GLfloat AlienBody[][2] = { {-4,9}, {-6,0}, {0,0}, {0.5,9}, {0.15,12}, {-14,18}, {-19,10}, {-20,0},{-6,0} };
+
+// Gfloat valued 3D graphics coordinates
+GLfloat a[][2] = { 0,-50, 70,-50, 70,70, -70,70 }; //  4 rows and 2 columns, where each row represents the x and y coordinates of a point, Makes a rectangle?????????
+
+GLfloat LightColor[][3] = { 1,1,0,   0,1,1,   0,1,0 }; // 3 rows and 3 columns, where each row represents the RGB (Red, Green, Blue) color values of a light source //Row 1: Yellow, Row 2: Cyan, Row 3: Green
+
+GLfloat AlienBody[][2] = { {-4,9}, {-6,0}, {0,0}, {0.5,9}, {0.15,12}, {-14,18}, {-19,10}, {-20,0},{-6,0} }; // 9 rows and 2 columns, defines the outline of an alien body.
 GLfloat AlienCollar[][2] = { {-9,10.5}, {-6,11}, {-5,12}, {6,18}, {10,20}, {13,23}, {16,30}, {19,39}, {16,38},
 						  {10,37}, {-13,39}, {-18,41}, {-20,43}, {-20.5,42}, {-21,30}, {-19.5,23}, {-19,20},
-						  {-14,16}, {-15,17},{-13,13},  {-9,10.5} };
+						  {-14,16}, {-15,17},{-13,13},  {-9,10.5} }; //21 rows and 2 columns, defines the outline of an alien collar.
 GLfloat ALienFace[][2] = { {-6,11}, {-4.5,18}, {0.5,20}, {0.,20.5}, {0.1,19.5}, {1.8,19}, {5,20}, {7,23}, {9,29},
 						{6,29.5}, {5,28}, {7,30}, {10,38},{11,38}, {11,40}, {11.5,48}, {10,50.5},{8.5,51}, {6,52},
 						{1,51}, {-3,50},{-1,51}, {-3,52}, {-5,52.5}, {-6,52}, {-9,51}, {-10.5,50}, {-12,49}, {-12.5,47},
 						{-12,43}, {-13,40}, {-12,38.5}, {-13.5,33},{-15,38},{-14.5,32},  {-14,28}, {-13.5,33}, {-14,28},
 						{-13.8,24}, {-13,20}, {-11,19}, {-10.5,12}, {-6,11} };
+// 42 rows and 2 columns, defines the outline of an alien face
 GLfloat ALienBeak[][2] = { {-6,21.5}, {-6.5,22}, {-9,21}, {-11,20.5}, {-20,20}, {-14,23}, {-9.5,28}, {-7,27}, {-6,26.5},
 						{-4.5,23}, {-4,21}, {-6,19.5}, {-8.5,19}, {-10,19.5}, {-11,20.5} };
+//define the vertices of an alien beak shape
 
 
+//displays a string of text in a 3D graphics environment using the rasterization method.
 void displayRasterText(float x, float y, float z, char* stringToDisplay) {
-	glRasterPos3f(x, y, z);
+	glRasterPos3f(x, y, z);// sets the raster position for the text to be displayed, with (x, y, z) being the 3D coordinates where the text will start rendering.
 	for (char* c = stringToDisplay; *c != '\0'; c++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c); //renders each character in the string using the specified font and size (GLUT_BITMAP_TIMES_ROMAN_24) at the current raster position
 	}
 }
 
+
+//initialization function in OpenGL that sets up the initial state of the graphics rendering context
 void init()
 {
-	glClearColor(0.0, 0.0, 0.0, 0);
-	glColor3f(1.0, 0.0, 0.0);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+	glClearColor(0.0, 0.0, 0.0, 0); //sets the color that OpenGL uses to clear the screen to black.
+	glColor3f(1.0, 0.0, 0.0); //sets the current drawing color to red
+	glMatrixMode(GL_PROJECTION); //selects the projection matrix stack for modification. matrices are used to specify how the 3D geometry is projected onto a 2D screen. so 'projection matrix' is used to transform the 3D geometry into a 2D view frustum. 
+	glLoadIdentity();//sets the current matrix to the identity matrix.
 
-	gluOrtho2D(-1200, 1200, -700, 700);                   //<-----CHANGE THIS TO GET EXTRA SPACE
-	//  gluOrtho2D(-200,200,-200,200);
-	glMatrixMode(GL_MODELVIEW);
+	gluOrtho2D(-1200, 1200, -700, 700); //specifies an orthographic projection matrix for 2D drawing.                
+	glMatrixMode(GL_MODELVIEW); // selects the modelview matrix stack for modification.
 }
 
+
+//to display the introductory screen of a game. 
 void introScreen()
 {
 	char college[80]="Thapar Institute of Engineering and Technology";
@@ -83,10 +120,9 @@ void introScreen()
 	
 
 
-	glClear(GL_COLOR_BUFFER_BIT);
-	
-	glColor3f(1.0, 0.0, 0.0);
-	displayRasterText(-425, 490, 0.0, college ); //college
+	glClear(GL_COLOR_BUFFER_BIT); //clears the color buffer	to preset values. it takes a single argument that is the bitwise OR of several values indicating which buffer is to be cleared. GL_COLOR_BUFFER_BIT:Indicates the buffers currently enabled for color writing.
+	glColor3f(1.0, 0.0, 0.0);//sets the color to red
+	displayRasterText(-425, 490, 0.0, college ); // displays the name of the college
 	glColor3f(1.0, 1.0, 1.0);
 	displayRasterText(-700, 385, 0.0, dept); //dept
 	glColor3f(0.0, 0.0, 1.0);
@@ -108,67 +144,83 @@ void introScreen()
 	//displayRasterText(500, -200, 0.0, temp);
 	glColor3f(1.0, 0.0, 0.0);
 	displayRasterText(-250, -400, 0.0, year); //year
-	glColor3f(1.0, 1.0, 1.0);
+	glColor3f(1.0, 1.0, 1.0);//sets the color to white
 	displayRasterText(-300, -550, 0.0, start); //start
-	glFlush();
-	glutSwapBuffers();
+	glFlush();//force execution of GL commands in finite time. empties all of these buffers, causing all issued commands to be executed as quickly as they are accepted by the actual rendering engine. Though this execution may not be completed in any particular time period, it does complete in finite time.
+	glutSwapBuffers();//swaps the buffers (using glutSwapBuffers) to display the screen to the user.
 }
 
 void startScreenDisplay()
 {
-	glLineWidth(10);
-	//SetDisplayMode(MENU_SCREEN);
-
+	
+	glLineWidth(10); //Set the width of lines to be drawn to 10 pixels
+	
+	//red rectangular border
 	glColor3f(1, 0, 0);
-	glBegin(GL_LINE_LOOP);               //Border
+	glBegin(GL_LINE_LOOP);              
 	glVertex2f(-750, -500);
 	glVertex2f(-750, 550);
 	glVertex2f(750, 550);
 	glVertex2f(750, -500);
 	glEnd();
 
-	glLineWidth(1);
 
+	glLineWidth(1);// line width set to 1
+
+	//start game yellow polygom
 	glColor3f(1, 1, 0);
-	glBegin(GL_POLYGON);				//START GAME PLOYGON
+	glBegin(GL_POLYGON);
 	glVertex2f(-200, 300);
 	glVertex2f(-200, 400);
 	glVertex2f(200, 400);
 	glVertex2f(200, 300);
 	glEnd();
 
-	glBegin(GL_POLYGON);				//INSTRUCTIONS POLYGON
+	//instructions yellow polygon
+	glBegin(GL_POLYGON);
 	glVertex2f(-200, 50);
 	glVertex2f(-200, 150);
 	glVertex2f(200, 150);
 	glVertex2f(200, 50);
 	glEnd();
 
-	glBegin(GL_POLYGON);				//QUIT POLYGON
+	//quit yellow polygon
+	glBegin(GL_POLYGON);
 	glVertex2f(-200, -200);
 	glVertex2f(-200, -100);
 	glVertex2f(200, -100);
 	glVertex2f(200, -200);
 	glEnd();
 
+	
+	//Check if the mouse pointer is hovering over any of the polygons coordinates
+
+
+	// If the mouse pointer is over the START GAME polygon 
 	if (mouseX >= -100 && mouseX <= 100 && mouseY >= 150 && mouseY <= 200) {
-		glColor3f(0, 0, 1);
-		if (mButtonPressed) {
-			alienLife1 = alienLife2 = 100;
-			viewPage = GAME;
-			mButtonPressed = false;
+
+		glColor3f(0, 0, 1); //hover color
+
+		if (mButtonPressed) { //if the mouse button is clicked
+			alienLife1 = alienLife2 = 100; //set the life of two aliens to 100 
+			viewPage = GAME; //switch to the GAME viewPage.
+			mButtonPressed = false;  //set button click back to false
 		}
 	}
 	else
-		glColor3f(0, 0, 0);
+		glColor3f(0, 0, 0); //no hover color
 
+	//Display text at specified coordinates
 	char start2[40] = "Start the Game";
 	displayRasterText(-100, 340, 0.4, start2);
 
+	//If the mouse pointer is over the INSTRUCTIONS polygon
 	if (mouseX >= -100 && mouseX <= 100 && mouseY >= 30 && mouseY <= 80) {
+
 		glColor3f(0, 0, 1);
-		if (mButtonPressed) {
-			viewPage = INSTRUCTIONS;
+
+		if (mButtonPressed) { //the mouse button is pressed
+			viewPage = INSTRUCTIONS; //then switch to the INSTRUCTIONS viewPage
 			mButtonPressed = false;
 		}
 	}
@@ -178,11 +230,15 @@ void startScreenDisplay()
 	char inst[40] = "Instructions";
 	displayRasterText(-120, 80, 0.4, inst);
 
+
+	// If the mouse pointer is over the QUIT polygon 
 	if (mouseX >= -100 && mouseX <= 100 && mouseY >= -90 && mouseY <= -40) {
+
 		glColor3f(0, 0, 1);
-		if (mButtonPressed) {
+
+		if (mButtonPressed) { // the mouse button is pressed
 			mButtonPressed = false;
-			exit(0);
+			exit(0); // exit the program.
 		}
 	}
 	else
@@ -190,26 +246,36 @@ void startScreenDisplay()
 
 	char quit[40] = "	Quit";
 	displayRasterText(-100, -170, 0.4, quit);
-	glutPostRedisplay();
+
+	glutPostRedisplay();//glutPostRedisplay marks the current window as needing to be redisplayed. So update the screen.
 }
 
+
+//to go back to the menu page
 void backButton() {
+
 	char back[40] = "Back";
+	displayRasterText(-1000, -550, 0, back);
+
+	// if the current position of the mouse pointer is on Back
 	if (mouseX <= -450 && mouseX >= -500 && mouseY >= -275 && mouseY <= -250) {
 		glColor3f(0, 0, 1);
-		if (mButtonPressed) {
-			viewPage = MENU;
+		if (mButtonPressed) { //if mouse button is pressed
+			viewPage = MENU;//switch to MENU viewpage
 			mButtonPressed = false;
 			glutPostRedisplay();
 		}
 	}
-	else glColor3f(1, 0, 0);
-	displayRasterText(-1000, -550, 0, back);
+	else glColor3f(1, 0, 0); //if not in the region then color set to red
+	
 }
 
+
+
+//for displaying the instructions screen
 void instructionsScreenDisplay()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  //clear color and depth buffers
 
 	char inst1[40] = "INSTRUCTIONS";
 	char inst2[40] = "PLAYER 1";
@@ -227,12 +293,12 @@ void instructionsScreenDisplay()
 	char inst14[100] = "The Objective is to kill your opponent.";
 	char inst15[100] = "Each time a player gets shot, LIFE decreases by 5 points.";
 	
-	glColor3f(1, 0, 0);
+	glColor3f(1, 0, 0); //red
 	displayRasterText(-900, 550, 0.4, inst1);
-	glColor3f(1, 0, 0);
+	glColor3f(1, 0, 0); //red
 	displayRasterText(-1000, 400, 0.4, inst2);
 	displayRasterText(200, 400, 0.4, inst3);
-	glColor3f(1, 1, 1);
+	glColor3f(1, 1, 1); //white
 	displayRasterText(-1100, 300, 0.4, inst4);
 	displayRasterText(-1100, 200, 0.4, inst5);
 	displayRasterText(-1100, 100, 0.4, inst6);
@@ -245,103 +311,136 @@ void instructionsScreenDisplay()
 	displayRasterText(100, -100, 0.4, inst13);
 	displayRasterText(-1100, -300, 0.4, inst14);
 	displayRasterText(-1100, -370, 0.4, inst15);
-	backButton();
+
+	backButton();//go to back menu
 	
 }
 
+
+//to draw the alien body
 void DrawAlienBody(bool isPlayer1)
 {
+
+	//Body color of player 1 and player 2
 	if (isPlayer1)
-		glColor3f(0, 1, 0);
+		glColor3f(0, 1, 0); //green-->player1 (but in game we mentioned it as 2)
 	else
-		glColor3f(1, 1, 0);		//BODY color
-	glBegin(GL_POLYGON);
+		glColor3f(1, 1, 0);		//yellow-->player 2 (but in game we mentioned it as 1)
+	
+
+	//Draw polygon body
+	glBegin(GL_POLYGON); //interpret/delimit the vertices as a convex POLYGON
 	for (int i = 0; i <= 8; i++)
-		glVertex2fv(AlienBody[i]);
+		glVertex2fv(AlienBody[i]); //take vertices from AlienBody array.
 	glEnd();
 
-	glColor3f(0, 0, 0);			//BODY Outline
+	//Draw outline of body
+	glColor3f(0, 0, 0);			
 	glLineWidth(1);
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i <= 8; i++)
 		glVertex2fv(AlienBody[i]);
 	glEnd();
 
-	glBegin(GL_LINES);                //BODY effect
+	//Draw Body line effects
+	glBegin(GL_LINES);                
 	glVertex2f(-13, 11);
 	glVertex2f(-15, 9);
 	glEnd();
 }
+
+
+//to draw alien collar
 void DrawAlienCollar()
 {
-	glColor3f(1, 0, 0);				//COLLAR
+	glColor3f(1, 0, 0);	//red
+
+	//draw the collar
 	glBegin(GL_POLYGON);
 	for (int i = 0; i <= 20; i++)
-		glVertex2fv(AlienCollar[i]);
+		glVertex2fv(AlienCollar[i]);//take vertices from AlienCollar array
 	glEnd();
 
-	glColor3f(0, 0, 0);				//COLLAR outline
+	//draw the collar outline
+	glColor3f(0, 0, 0);				
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i <= 20; i++)
 		glVertex2fv(AlienCollar[i]);
 	glEnd();
 }
+
+
+//to draw alien face
 void DrawAlienFace(bool isPlayer1)
 {	
-	glColor3f(0, 0, 1);
+	glColor3f(0, 0, 1); //blue
 
+	//draw face using polygon
 	glBegin(GL_POLYGON);
 	for (int i = 0; i <= 42; i++)
-		glVertex2fv(ALienFace[i]);
+		glVertex2fv(ALienFace[i]); //take vertices from AlienFace array
 	glEnd();
 
-	glColor3f(0, 0, 0);				//FACE outline
+	//draw outline
+	glColor3f(0, 0, 0);			
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i <= 42; i++)
 		glVertex2fv(ALienFace[i]);
 	glEnd();
 
-	glBegin(GL_LINE_STRIP);      //EAR effect
+	//draw ears
+	glBegin(GL_LINE_STRIP);
 	glVertex2f(3.3, 22);
 	glVertex2f(4.4, 23.5);
 	glVertex2f(6.3, 26);
 	glEnd();
 }
+
+//to draw beak
 void DrawAlienBeak()
 {
-	glColor3f(1, 1, 0);				//BEAK color
+	glColor3f(1, 1, 0);	//yellow
+
+	//draw beak
 	glBegin(GL_POLYGON);
 	for (int i = 0; i <= 14; i++)
 		glVertex2fv(ALienBeak[i]);
 	glEnd();
 
-	glColor3f(0, 0, 0);				//BEAK outline
+	//draw outline of beak
+	glColor3f(0, 0, 0);				
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i <= 14; i++)
 		glVertex2fv(ALienBeak[i]);
 	glEnd();
 }
+
+
+// to draw alien eyes
 void DrawAlienEyes(bool isPlayer1)
 {
-	// if(isPlayer1)
-	glColor3f(0, 1, 1);
-	// else
-	// 	glColor3f(0,0,0);
 
-	glPushMatrix();
-	glRotated(-10, 0, 0, 1);
-	glTranslated(-6, 32.5, 0);      //Left eye
-	glScalef(2.5, 4, 0);
-	glutSolidSphere(1, 20, 30);
-	glPopMatrix();
+	glColor3f(0, 1, 1);//cyan
+	
+	//draw Left eye
+	glPushMatrix(); //pushes current matrix onto the stack, so that any tranformation performed on the matrix after this poitn can be undine using pop
+	glRotated(-10, 0, 0, 1); // rotate the matrix by -10 degrees around z-axis
+	glTranslated(-6, 32.5, 0);// translate the matrix which moves the origin of the matrix to the left eye location
+	glScalef(2.5, 4, 0); //scale the matrix in x and y axis
+	glutSolidSphere(1, 20, 30); // solid sphere of radius 1----> creates left eye
+	glPopMatrix(); //pop the matrix from stack, hence undo all prev transformation
 
+	//draw right eye
 	glPushMatrix();
 	glRotated(-1, 0, 0, 1);
-	glTranslated(-8, 36, 0);							//Right eye
+	glTranslated(-8, 36, 0);							
 	glScalef(2.5, 4, 0);
 	glutSolidSphere(1, 100, 100);
 	glPopMatrix();
 }
+
+
+//to draw alien
 void DrawAlien(bool isPlayer1)
 {
 	DrawAlienBody(isPlayer1);
@@ -350,6 +449,8 @@ void DrawAlien(bool isPlayer1)
 	DrawAlienBeak();
 	DrawAlienEyes(isPlayer1);
 }
+
+
 void DrawSpaceshipBody(bool isPlayer1)
 {
 	if (isPlayer1)
@@ -462,7 +563,24 @@ void DisplayHealthBar2() {
 	glColor3f(1, 0, 0);
 }
 
+
+
+
 void checkLaserContact(int x, int y, bool dir[], int xp, int yp, bool player1) {
+//x,y: laser line starting points
+//xp, yp: spaceship center points
+
+
+// #define TOP 0
+// #define RIGHT 1
+// #define BOTTOM 2
+// #define LEFT 3
+
+// bool direction[4] = { false }; top right bottom left
+// bool laser1Dir[2] = { false }; top bottom
+// bool laser2Dir[2] = { false };
+
+
 	int xend = -XMAX, yend = y;
 	xp += 8; yp += 8; // moving circle slightly up to fix laser issue
 	if (dir[0])
@@ -470,17 +588,15 @@ void checkLaserContact(int x, int y, bool dir[], int xp, int yp, bool player1) {
 	else if (dir[1])
 		yend = -YMAX;
 
-	// Here we find out if the laser(line) intersects with spaceship(circle)
-	// by solving the equations for the same and finding the discriminant of the
-	// quadratic equation obtained
-	float m = (float)(yend - y) / (float)(xend - x);
-	float k = y - m * x;
+	// Here we find out if the laser(line) intersects with spaceship(circle), by solving the equations for the same and finding the discriminant of the quadratic equation obtained
+	float m = (float)(yend - y) / (float)(xend - x); // slope 
+	float k = y - m * x; //laser line
 	int r = 50; // approx radius of the spaceship
 
 	//calculating value of b, a, and c needed to find discriminant
-	float b = 2 * xp - 2 * m * (k - yp);
-	float a = 1 + m * m;
-	float c = xp * xp + (k - yp) * (k - yp) - r * r;
+	float b = 2 * xp - 2 * m * (k - yp); //we get this eqn after solving ax^2 + bx + c = 0 (intersection of circle and line) and x = -b / 2a
+	float a = 1 + m * m; //to get this, solev for "y" in this y - k = m * (x - xp) and the eqn of circle
+	float c = xp * xp + (k - yp) * (k - yp) - r * r; //spaceship circle
 
 	float d = (b * b - 4 * a * c); // discriminant for the equation
 	printf("\nDisc: %f x: %d, y: %d, xp: %d, yp: %d", d, x, y, xp, yp);
@@ -501,7 +617,7 @@ void gameScreenDisplay()
 	glScalef(2, 2, 0);
 
 	if (alienLife1 > 0) {
-		SpaceshipCreate(xOne, yOne, true);
+		SpaceshipCreate(xOne, yOne, true); //true = player1
 		if (laser1) {
 			DrawLaser(xOne, yOne, laser1Dir);
 			checkLaserContact(xOne, yOne, laser1Dir, -xTwo, yTwo, true);
@@ -514,7 +630,7 @@ void gameScreenDisplay()
 	if (alienLife2 > 0) {
 		glPushMatrix();
 		glScalef(-1, 1, 1);
-		SpaceshipCreate(xTwo, yTwo, false);
+		SpaceshipCreate(xTwo, yTwo, false); //false=player2
 		if (laser2) {
 			DrawLaser(xTwo, yTwo, laser2Dir);
 			checkLaserContact(xTwo, yTwo, laser2Dir, -xOne, yOne, false);
@@ -655,13 +771,16 @@ int main(int argc, char** argv)
 	glutInitWindowSize(1200, 600);
 	glutCreateWindow("OpenGL Space Shooting Game");
 	init();
-	//glutReshapeFunc(reshape);
-	glutIdleFunc(refresh);
-	glutKeyboardFunc(keyPressed);
-	glutKeyboardUpFunc(keyReleased);
-	glutMouseFunc(mouseClick);
-	glutPassiveMotionFunc(passiveMotionFunc);
-	glGetIntegerv(GL_VIEWPORT, m_viewport);
+	glutIdleFunc(refresh); //glutIdleFunc sets the global idle callback to be func so a GLUT program can perform background processing tasks or continuous animation when window system events are not being received. If enabled, the idle callback is continuously called when events are not being received. The callback routine has no parameters.
+
+	glutKeyboardFunc(keyPressed); // glutKeyboardFunc sets the keyboard callback for the current window.
+
+	glutKeyboardUpFunc(keyReleased); // glutKeyboardFunc sets the keyboard up (key release) callback for the current window. 
+
+	glutMouseFunc(mouseClick); //glutMouseFunc sets the mouse callback for the current window. When a user presses and releases mouse buttons in the window, each press and each release generates a mouse callback. The button parameter is one of GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON.
+	glutPassiveMotionFunc(passiveMotionFunc); //glutPassiveMotionFunc set the motion and passive motion callback respectively for the current window.
+	glGetIntegerv(GL_VIEWPORT, m_viewport); //glGetIntegerv function returns the value or values of a selected parameter.
 	glutDisplayFunc(display);
 	glutMainLoop();
 }
+
