@@ -5,7 +5,7 @@ A C++ game built using OpenGL and GLUT libraries. The main objective is to kill 
 ### Submitted By:- 
 - Pranjal Arora (102003402)
 - Naga Madhurya Peram (102003407)
-- Aryan Sood (102003042)
+- Aryan Sood (102053042)
 
 ### Computer Graphic concepts used:-
     1. Transformation - Translation, Scaling, Rotation
