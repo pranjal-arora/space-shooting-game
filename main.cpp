@@ -76,7 +76,7 @@ void introScreen()
 	char create[40] = "Created by:- ";
 	char name1[40] = "Pranjal Arora, 102003402";
 	char name2[40] = "Naga Madhurya Peram, 102003407";
-	char name3[40] = "Aryan Sood, 102003042";
+	char name3[40] = "Aryan Sood, 102053042";
 	char guide[40] = "Under Guidance of  Ms. Kanupriya";
 	char year[40] = "EVENSEM 2022-23";
 	char start[40] = "Press ENTER to start the game";
