@@ -38,7 +38,7 @@ A C++ game built using OpenGL and GLUT libraries. The main objective is to kill 
 ![Instruction](https://github.com/pranjal-arora/space-shooting-game/blob/main/source/instruction.png?raw=true)
 
 ### Intro Page
-![Introduction](https://github.com/pranjal-arora/space-shooting-game/blob/main/source/intro.png?raw=true)
+![Introduction](https://github.com/pranjal-arora/space-shooting-game/blob/main/source/introd.png?raw=true)
 
 ### Menu Page
 ![menu](https://github.com/pranjal-arora/space-shooting-game/blob/main/source/menu.png?raw=true)
